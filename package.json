@@ -1,6 +1,6 @@
 {
   "name": "remit-cli",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "description": "A CLI interface to perform basic Remit actions.",
   "main": "index.js",
   "scripts": {
