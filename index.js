@@ -56,7 +56,7 @@ if (emit) {
   console.log(`Listening to ${target} messagse...`)
 
   remit.listen(target, function (args) {
-    console.log('\n\n', args)
+    console.log('\n\n', JSON.stringify(args, null, 2))
   })
 } else {
   remit.treq(target, data, (err, data) => {
@@ -65,7 +65,7 @@ if (emit) {
     }
 
     if (data) {
-      console.log(data)
+      console.log(JSON.stringify(data, null, 2))
     }
 
     process.exit(0)
