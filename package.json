@@ -25,6 +25,7 @@
   "homepage": "https://github.com/jpwilliams/remit-cli#readme",
   "dependencies": {
     "commander": "^2.9.0",
+    "jsome": "^2.3.26",
     "remit": "^1.8.1"
   },
   "bin": {
