@@ -1,6 +1,21 @@
 #! /usr/bin/env node
 
 const expand = require('expand-object')
+const jsome = require('jsome')
+
+jsome.colors = {
+  'num': 'cyan',
+  'str': 'yellow',
+  'bool': 'cyan',
+  'regex': 'blue',
+  'undef': 'grey',
+  'null': 'grey',
+  'attr': 'white',
+  'quot': 'yellow',
+  'punc': 'yellow',
+  'brack': 'cyan'
+}
+
 const program = require('commander')
 
 function collectArgs (val, list) {
@@ -19,6 +34,7 @@ program
   .option('-f, --file [path]', 'Data file (overwrites -d)')
   .option('-n, --service-name [name]', 'Service name')
   .option('-u, --url [url]', 'RabbitMQ URL')
+  .option('-r --raw', 'Raw output')
   .parse(process.argv)
 
 if (!program.args.length) {
@@ -42,6 +58,7 @@ if (program.file) {
 
 let emit = !!program.emission
 let listen = !!program.listen
+const raw = !!program.raw
 
 if (emit && listen) {
   console.error('Cannot emit and listen at the same time')
@@ -66,16 +83,24 @@ if (emit) {
   console.log(`Listening to ${target} messagse...`)
 
   remit.listen(target, function (args) {
-    console.log('\n\n', JSON.stringify(args, null, 2))
+    console.log('\n\n', jsome(args))
   })
 } else {
   remit.treq(target, data, (err, data) => {
     if (err) {
-      console.error(err)
+      if (raw) {
+        console.error(JSON.stringify(err))
+      } else {
+        jsome(err)
+      }
     }
 
     if (data) {
-      console.log(JSON.stringify(data, null, 2))
+      if (raw) {
+        console.log(JSON.stringify(data))
+      } else {
+        jsome(data)
+      }
     }
 
     process.exit(0)

@@ -21,5 +21,6 @@ $ remit-cli
     -f, --file [path]          Data file (overwrites -d)
     -n, --service-name [name]  Service name
     -u, --url [url]            RabbitMQ URL
+    -r, --raw                  Raw output
 
 ```
