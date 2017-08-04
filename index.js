@@ -2,6 +2,7 @@
 
 const expand = require('expand-object')
 const jsome = require('jsome')
+const version = require('./package.json').version
 
 jsome.colors = {
   'num': 'cyan',
@@ -25,7 +26,7 @@ function collectArgs (val, list) {
 }
 
 program
-  .version('0.0.1')
+  .version(version)
   .usage('<target> [options]')
   .option('-e, --emission', 'Emit')
   .option('-l, --listen', 'Listen')
