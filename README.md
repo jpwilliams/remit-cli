@@ -16,7 +16,8 @@ $ remit-cli
     -V, --version              output the version number
     -e, --emission             Emit
     -l, --listen               Listen
-    -d, --data [json]          Data
+    -k, --keys [str]           Key/value pairs from the expand-object package
+    -d, --data [json]          Data (overwrites -k)
     -f, --file [path]          Data file (overwrites -d)
     -n, --service-name [name]  Service name
     -u, --url [url]            RabbitMQ URL
