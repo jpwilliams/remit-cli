@@ -1,12 +1,20 @@
 #! /usr/bin/env node
 
+const expand = require('expand-object')
 const program = require('commander')
+
+function collectArgs (val, list) {
+  list.push(val)
+
+  return list
+}
 
 program
   .version('0.0.1')
   .usage('<target> [options]')
   .option('-e, --emission', 'Emit')
   .option('-l, --listen', 'Listen')
+  .option('-k, --keys [str]', 'Key/value pairs from expand-object package', collectArgs, [])
   .option('-d, --data [json]', 'Data')
   .option('-f, --file [path]', 'Data file (overwrites -d)')
   .option('-n, --service-name [name]', 'Service name')
@@ -28,6 +36,8 @@ if (program.file) {
   data = require(program.file)
 } else if (program.data) {
   data = JSON.parse(program.data)
+} else if (program.keys && program.keys.length) {
+  data = Object.assign(...program.keys.map(expand))
 }
 
 let emit = !!program.emission
