@@ -1,6 +1,6 @@
 {
   "name": "remit-cli",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "A CLI interface to perform basic Remit actions.",
   "main": "index.js",
   "scripts": {
@@ -25,6 +25,8 @@
   "homepage": "https://github.com/jpwilliams/remit-cli#readme",
   "dependencies": {
     "commander": "^2.9.0",
+    "expand-object": "^0.4.2",
+    "jsome": "^2.3.26",
     "remit": "^1.8.1"
   },
   "bin": {
