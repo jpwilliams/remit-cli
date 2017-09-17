@@ -24,10 +24,11 @@
   },
   "homepage": "https://github.com/jpwilliams/remit-cli#readme",
   "dependencies": {
-    "commander": "^2.9.0",
     "expand-object": "^0.4.2",
-    "jsome": "^2.3.26",
-    "remit": "^1.8.1"
+    "p-time": "^1.0.0",
+    "prettyjson": "^1.2.1",
+    "remit": "^2.0.0",
+    "vorpal": "^1.12.0"
   },
   "bin": {
     "remit-cli": "./index.js"
