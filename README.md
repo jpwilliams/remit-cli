@@ -7,20 +7,11 @@ npm install -g remit-cli
 
 ``` sh
 $ remit-cli
+  Commands:
 
-  Usage: remit-cli <target> [options]
-
-  Options:
-
-    -h, --help                 output usage information
-    -V, --version              output the version number
-    -e, --emission             Emit
-    -l, --listen               Listen
-    -k, --keys [str]           Key/value pairs from the expand-object package
-    -d, --data [json]          Data (overwrites -k)
-    -f, --file [path]          Data file (overwrites -d)
-    -n, --service-name [name]  Service name
-    -u, --url [url]            RabbitMQ URL
-    -r, --raw                  Raw output
-
+    help [command...]                       Provides help for a given command.
+    exit                                    Exits application.
+    request [options] <endpoint> [args...]
+    emit <endpoint> [args...]
+    listen <endpoint>
 ```

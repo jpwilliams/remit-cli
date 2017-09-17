@@ -64,6 +64,3 @@ vorpal
 vorpal
   .delimiter(chalk.magenta('remit~$'))
   .show()
-
-
-  // setInterval(() => {remit.emit('foo', {a:{b:1}})({foo:1})}, 1000)
