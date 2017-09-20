@@ -1,4 +1,3 @@
-const remit = require('remit')
 const pTime = require('p-time')
 
 const pretty = require('./pretty')
@@ -7,11 +6,25 @@ const marshal = require('./marshal')
 const vorpal = require('vorpal')()
 const chalk = vorpal.chalk
 
-vorpal.localStorage('remotes')
+vorpal
+  .delimiter(chalk.magenta('remit$'))
+  .localStorage('remotes')
 
-  vorpal
+const REMIT_HOST = vorpal.localStorage._localStorage.keys[vorpal.localStorage.getItem('default')]
+const remit = require('remit')(REMIT_HOST)
+
+remit._connection.then(() => {
+  vorpal.log(chalk.green.bold('Successfully connected to RabbitMQ server:', REMIT_HOST))
+}).catch((e) => {
+  vorpal.log(chalk.red.bold('Failed to connect to RabbitMQ server:', REMIT_HOST, e))
+})
+
+this.noargs = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
+
+vorpal
   .command('remote <method> [origin] [url]')
   .autocomplete([
+    'default',
     'add',
     'remove',
     'flush',
@@ -19,6 +32,9 @@ vorpal.localStorage('remotes')
   ])
   .action(function (props, cb) {
     switch(props.method) {
+      case 'default':
+        vorpal.localStorage.setItem('default', props.origin)
+      break
       case 'add':
         vorpal.localStorage.setItem(props.origin, props.url)
         break
@@ -38,32 +54,7 @@ vorpal.localStorage('remotes')
         break
     }
 
-    cb()
-  })
-
-  vorpal
-  .command('connect [remote]')
-  .action(function (props, cb) {
-    if (props.remote) {
-      let remote = vorpal.localStorage.getItem(props.remote)
-
-      if (remote) {
-        remit(remote)
-      } else {
-        this.log('REMOTE NOT FOUND')      
-      }
-
-      return cb()
-    }
-
-    this.prompt({
-      type: 'list',
-      name: 'remote',
-      choices: vorpal.localStorage._localStorage.keys,
-      message: 'Which remote do you want to connect to?'
-    }, (result) => {
-      cb()
-    })
+    return this.noargs ? cb() : null
   })
 
 vorpal
@@ -71,16 +62,14 @@ vorpal
   .option('-v, --verbose')
   .action(async function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
-    
+
     const makeRequest = remit
       .request(props.endpoint)
       .options({ timeout: 1000 })
 
     await makeRequest.ready()
 
-    const request = pTime(makeRequest)(args)
-
-    request.then((data) => {
+    const request = await pTime(makeRequest)(args).then((data) => {
       const bg = request.time < 200 ? 'green' : request.time > 500 ? 'red' : 'yellow'
 
       if (props.options.verbose) {
@@ -89,10 +78,10 @@ vorpal
       } else {
         this.log(pretty(data))
       }
-
-      cb()
     })
     .catch((e) => this.log(e))
+
+    this.noargs ? cb() : null
   })
 
 vorpal
@@ -108,18 +97,26 @@ vorpal
 
   vorpal
   .command('listen <endpoint>')
-  .action(async function (props, cb) {
-    console.log('got listen')
+  .action(function (props, cb) {
     remit
       .listen(props.endpoint)
-      .handler((data) => {
-        console.log('got msg')
+      .handler((data, cb) => {
+        cb()
         this.log(pretty(data)) 
       })
       .start()
    })
 
+if (this.noargs) {
+  vorpal.show()
+} else {
+  // argv is mutated by the first call to parse.
+  process.argv.unshift('')
+  process.argv.unshift('')
 
-vorpal
-  .delimiter(chalk.magenta('remit~$'))
-  .show()
+  vorpal
+    .on('client_command_executed', function (evt) {
+      process.exit(0)
+    })
+    .parse(process.argv)
+}
