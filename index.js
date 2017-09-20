@@ -11,13 +11,18 @@ vorpal
   .localStorage('remotes')
 
 const REMIT_HOST = vorpal.localStorage._localStorage.keys[vorpal.localStorage.getItem('default')]
-const remit = require('remit')(REMIT_HOST)
-
-remit._connection.then(() => {
-  vorpal.log(chalk.green.bold('Successfully connected to RabbitMQ server:', REMIT_HOST))
-}).catch((e) => {
-  vorpal.log(chalk.red.bold('Failed to connect to RabbitMQ server:', REMIT_HOST, e))
+const remit = require('remit')({
+  url: REMIT_HOST
 })
+
+const logConnectionStatus = (function makeConnectionStatus () {
+  remit._connection.then(() => {
+    vorpal.log(chalk.green.bold('Successfully connected to RabbitMQ server:', remit._options.url))
+  }).catch((e) => {
+    vorpal.log(chalk.red.bold('Failed to connect to RabbitMQ server:', remit._options.url, e))
+  })
+})
+
 
 this.noargs = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
 
@@ -78,10 +83,13 @@ vorpal
       } else {
         this.log(pretty(data))
       }
-    })
-    .catch((e) => this.log(e))
 
-    this.noargs ? cb() : null
+      this.noargs ? cb() : null
+    })
+    .catch((e) => {
+      logConnectionStatus()
+      vorpal.log(chalk.red.bold.underline('Error'), chalk.red.bold(JSON.stringify(e, null, 2)))
+    })
   })
 
 vorpal
@@ -109,6 +117,7 @@ vorpal
 
 if (this.noargs) {
   vorpal.show()
+  logConnectionStatus()
 } else {
   // argv is mutated by the first call to parse.
   process.argv.unshift('')
