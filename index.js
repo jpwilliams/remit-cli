@@ -29,7 +29,7 @@ const logConnectionStatus = (function makeConnectionStatus () {
 vorpal.noargs = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
 
 vorpal
-  .command('remote <method> [origin] [url]')
+  .command('remote <method> [origin] [url]', 'Caches rabbitmq urls for convenience; like git remote' )
   .action(function (props, cb) {
     switch(props.method) {
       case 'default':
@@ -58,9 +58,9 @@ vorpal
   })
 
 vorpal
-  .command('request <endpoint> [args...]')
-  .option('-v, --verbose')
-  .option('--json')
+  .command('request <endpoint> [args...]', 'Makes a request to a remit endpoint')
+  .option('-v, --verbose', 'Prints latency')
+  .option('--json, --raw', 'Prints JSON rather than YAML')
   .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
 
@@ -89,8 +89,8 @@ vorpal
   })
 
 vorpal
-  .command('emit <endpoint> [args...]')
-  .option('--json')
+  .command('emit <endpoint> [args...]', 'Emits to a listener')
+  .option('--json, --raw', 'Prints JSON rather than YAML')
   .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
 
@@ -107,8 +107,8 @@ vorpal
   })
 
 vorpal
-  .command('listen <endpoint>')
-  .option('--json')
+  .command('listen <endpoint>', 'Listens for emits')
+  .option('--json, --raw', 'Prints JSON rather than YAML')
   .action(function (props, cb) {
     remit
       .listen(props.endpoint)
