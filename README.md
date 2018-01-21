@@ -11,9 +11,11 @@ $ remit-cli
 
     help [command...]                       Provides help for a given command.
     exit                                    Exits application.
+    remote <method> [origin] [url]
     request [options] <endpoint> [args...]
     emit <endpoint> [args...]
     listen <endpoint>
+
 ```
 
 [![asciicast](https://asciinema.org/a/7QTBx2nEOkpvltjqdW7cu9Lbr.png)](https://asciinema.org/a/7QTBx2nEOkpvltjqdW7cu9Lbr)
