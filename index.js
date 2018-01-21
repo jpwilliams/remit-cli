@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const pTime = require('p-time')
 
 const pretty = require('./pretty')
@@ -24,17 +26,10 @@ const logConnectionStatus = (function makeConnectionStatus () {
 })
 
 
-this.noargs = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
+vorpal.noargs = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
 
 vorpal
   .command('remote <method> [origin] [url]')
-  .autocomplete([
-    'default',
-    'add',
-    'remove',
-    'flush',
-    'peek'
-  ])
   .action(function (props, cb) {
     switch(props.method) {
       case 'default':
@@ -59,22 +54,22 @@ vorpal
         break
     }
 
-    return this.noargs ? cb() : null
+    return cb()
   })
 
 vorpal
   .command('request <endpoint> [args...]')
   .option('-v, --verbose')
-  .action(async function (props, cb) {
+  .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
 
     const makeRequest = remit
       .request(props.endpoint)
       .options({ timeout: 1000 })
 
-    await makeRequest.ready()
+    const request = pTime(makeRequest)(args)
 
-    const request = await pTime(makeRequest)(args).then((data) => {
+    request.then((data) => {
       const bg = request.time < 200 ? 'green' : request.time > 500 ? 'red' : 'yellow'
 
       if (props.options.verbose) {
@@ -84,38 +79,43 @@ vorpal
         this.log(pretty(data))
       }
 
-      this.noargs ? cb() : null
+      cb()
     })
     .catch((e) => {
-      logConnectionStatus()
-      vorpal.log(chalk.red.bold.underline('Error'), chalk.red.bold(JSON.stringify(e, null, 2)))
+      this.log(chalk.red.bold.underline('Error'), e)
+      cb()
     })
   })
 
 vorpal
   .command('emit <endpoint> [args...]')
-  .action(async function (props, cb) {
+  .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
-    
-    remit
-      .emit(props.endpoint)()
-      .then(cb)
-      .catch((e) => this.log(e))
+
+    const emit = remit.emit(props.endpoint)(args)
+
+    emit
+      .then((data) => {
+        this.log(data)
+      })
+      .catch((err) => {
+        this.log(chalk.red.bold.underline('Error'), e)
+      })
+      .then(cb, cb)
   })
 
-  vorpal
+vorpal
   .command('listen <endpoint>')
   .action(function (props, cb) {
     remit
       .listen(props.endpoint)
-      .handler((data, cb) => {
-        cb()
-        this.log(pretty(data)) 
+      .handler(async (data) => {
+        this.log(pretty(data), '\n') 
       })
       .start()
    })
 
-if (this.noargs) {
+if (vorpal.noargs) {
   vorpal.show()
   logConnectionStatus()
 } else {
