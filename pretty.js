@@ -1,4 +1,5 @@
 const prettyjson = require('prettyjson')
+const version = require('./package.json').version
 
 const standard = {
   keysColor: 'yellow',
@@ -8,10 +9,12 @@ const standard = {
 
 const schemes = { standard }
 
-function pretty (data, scheme = 'standard') {
+function pretty (data, json=false, scheme = 'standard') {
   if (!data) return
 
-  return prettyjson.render(data, schemes[scheme])
+  return json 
+    ? JSON.stringify(data, null, 2)
+    : prettyjson.render(data, schemes[scheme])
 }
 
 module.exports = pretty

@@ -60,6 +60,7 @@ vorpal
 vorpal
   .command('request <endpoint> [args...]')
   .option('-v, --verbose')
+  .option('--json')
   .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
 
@@ -73,10 +74,10 @@ vorpal
       const bg = request.time < 200 ? 'green' : request.time > 500 ? 'red' : 'yellow'
 
       if (props.options.verbose) {
-        this.log(pretty(data))      
+        this.log(pretty(data, props.options.json))      
         this.log(chalk.bold[bg](`took ${request.time}ms`))
       } else {
-        this.log(pretty(data))
+        this.log(pretty(data, props.options.json))
       }
 
       cb()
@@ -89,6 +90,7 @@ vorpal
 
 vorpal
   .command('emit <endpoint> [args...]')
+  .option('--json')
   .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
 
@@ -106,11 +108,12 @@ vorpal
 
 vorpal
   .command('listen <endpoint>')
+  .option('--json')
   .action(function (props, cb) {
     remit
       .listen(props.endpoint)
       .handler(async (data) => {
-        this.log(pretty(data), '\n') 
+        this.log(pretty(data, props.options.json), '\n') 
       })
       .start()
    })
