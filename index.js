@@ -5,36 +5,42 @@ const pTime = require('p-time')
 const pretty = require('./pretty')
 const marshal = require('./marshal')
 
-const vorpal = require('vorpal')()
+const Vorpal = require('vorpal')
+const vorpal = Vorpal()
 const chalk = vorpal.chalk
 
 vorpal
   .delimiter(chalk.magenta('remit$'))
   .localStorage('remotes')
-
-const REMIT_HOST = vorpal.localStorage._localStorage.keys[vorpal.localStorage.getItem('default')]
-const remit = require('remit')({
-  url: REMIT_HOST
-})
-
-const logConnectionStatus = (function makeConnectionStatus () {
-  remit._connection.then(() => {
-    vorpal.log(chalk.green.bold('Successfully connected to RabbitMQ server:', remit._options.url))
-  }).catch((e) => {
-    vorpal.log(chalk.red.bold('Failed to connect to RabbitMQ server:', remit._options.url, e))
-  })
-})
-
-
+ 
 vorpal.noargs = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
 
+// const AMQP_URL = vorpal.localStorage.getItem('default')
+// if (!AMQP_URL) vorpal.localStorage.setItem('default', 'amqp://localhost')
+// console.log('AMQP_URL', AMQP_URL)
+
+const remit = require('remit')({
+  url: 'amqp://dedjmejde' //AMQP_URL
+})
+
+// remit.request('foo').send().then(console.log, console.log)
+const connection = remit._connection
+  .then(c => console.log('ahahahah'))
+  .catch((e) => {
+    console.log('eh')
+    vorpal.log(chalk.red.bold('Failed to connect to RabbitMQ server:', remit._options.url, e))
+  })
+
+const logErr = e => vorpal.log(chalk.red.bold.underline('Error'), e)
+
 vorpal
-  .command('remote <method> [origin] [url]', 'Caches rabbitmq urls for convenience; like git remote' )
+  .command('remote <cmd> [origin] [url]', 'Caches rabbitmq urls for convenience; like git remote' )
   .action(function (props, cb) {
-    switch(props.method) {
-      case 'default':
-        vorpal.localStorage.setItem('default', props.origin)
-      break
+    switch(props.cmd) {
+      case 'set_default':
+        const target =  vorpal.localStorage.getItem(props.origin)
+        vorpal.localStorage.setItem('default', target)
+        break
       case 'add':
         vorpal.localStorage.setItem(props.origin, props.url)
         break
@@ -52,6 +58,9 @@ vorpal
         }
   
         break
+      default:
+        this.log('cmd not recognised', { props })
+        break
     }
 
     return cb()
@@ -64,26 +73,34 @@ vorpal
   .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
 
-    const makeRequest = remit
-      .request(props.endpoint)
-      .options({ timeout: 1000 })
+    console.log(1)
 
-    const request = pTime(makeRequest)(args)
+    connection.then(() => {
+      const makeRequest = remit
+        .request(props.endpoint)
+        .options({ timeout: 1000 })
+      
+        console.log(2)
 
-    request.then((data) => {
-      const bg = request.time < 200 ? 'green' : request.time > 500 ? 'red' : 'yellow'
+      const request = pTime(makeRequest)(args)
 
-      if (props.options.verbose) {
-        this.log(pretty(data, props.options.json))      
-        this.log(chalk.bold[bg](`took ${request.time}ms`))
-      } else {
-        this.log(pretty(data, props.options.json))
-      }
-
-      cb()
+      return request.then((data) => {
+        console.log(3)
+  
+        console.log('data', data)
+        const bg = request.time < 200 ? 'green' : request.time > 500 ? 'red' : 'yellow'
+  
+        if (props.options.verbose) {
+          this.log(pretty(data, props.options.json))      
+          this.log(chalk.bold[bg](`took ${request.time}ms`))
+        } else {
+          this.log(pretty(data, props.options.json))
+        }
+      })
     })
-    .catch((e) => {
-      this.log(chalk.red.bold.underline('Error'), e)
+    .then(cb)
+    .catch(e => {
+      logErr(e)
       cb()
     })
   })
@@ -94,16 +111,13 @@ vorpal
   .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
 
-    const emit = remit.emit(props.endpoint)(args)
-
-    emit
-      .then((data) => {
-        this.log(data)
+    connection
+      .then(_ => remit.emit(props.endpoint)(args))
+      .then(cb)
+      .catch(e => {
+        logErr(e)
+        cb()
       })
-      .catch((err) => {
-        this.log(chalk.red.bold.underline('Error'), e)
-      })
-      .then(cb, cb)
   })
 
 vorpal
@@ -120,7 +134,7 @@ vorpal
 
 if (vorpal.noargs) {
   vorpal.show()
-  logConnectionStatus()
+  // checkconnection()
 } else {
   // argv is mutated by the first call to parse.
   process.argv.unshift('')
