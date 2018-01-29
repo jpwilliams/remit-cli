@@ -2,11 +2,11 @@ const deepmerge = require('deepmerge')
 const expand = require('expand-object')
 
 function setToValue(obj, value, path) {
-  path = path.split('.');
+  path = path.split('.')
   for (i = 0; i < path.length - 1; i++)
-      obj = obj[path[i]];
+      obj = obj[path[i]]
 
-  obj[path[i]] = value;
+  obj[path[i]] = value
 }
 
 function marshal (args) {
