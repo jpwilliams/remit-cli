@@ -1,3 +1,7 @@
+// remit-cli request user.info.fast name.first:jack name.last:tuck
+// remit-cli request user.info.fast user.fullName:"jack tuck"
+// remit-cli request user.info.fast user.email:"jack-tuck@test.com"
+
 const remit = require('remit')({
   url: 'amqp://localhost'
 })

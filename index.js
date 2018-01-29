@@ -15,26 +15,26 @@ vorpal
  
 vorpal.noargs = vorpal.parse(process.argv, {use: 'minimist'})._ === undefined;
 
-// const AMQP_URL = vorpal.localStorage.getItem('default')
-// if (!AMQP_URL) vorpal.localStorage.setItem('default', 'amqp://localhost')
-// console.log('AMQP_URL', AMQP_URL)
+const AMQP_URL = vorpal.localStorage.getItem('default')
+if (!AMQP_URL) vorpal.localStorage.setItem('default', 'amqp://localhost')
 
 const remit = require('remit')({
-  url: 'amqp://dedjmejde' //AMQP_URL
+  url: AMQP_URL
 })
 
-// remit.request('foo').send().then(console.log, console.log)
-const connection = remit._connection
-  .then(c => console.log('ahahahah'))
-  .catch((e) => {
-    console.log('eh')
-    vorpal.log(chalk.red.bold('Failed to connect to RabbitMQ server:', remit._options.url, e))
-  })
+const logErr = e => vorpal.log(chalk.red.bold.underline('Error:'), e)
 
-const logErr = e => vorpal.log(chalk.red.bold.underline('Error'), e)
+const connection = remit._connection
+  .catch(logErr)
 
 vorpal
   .command('remote <cmd> [origin] [url]', 'Caches rabbitmq urls for convenience; like git remote' )
+  .autocomplete([
+    'set_default',
+    'add',
+    'remove',
+    'peek'
+  ])  
   .action(function (props, cb) {
     switch(props.cmd) {
       case 'set_default':
@@ -59,7 +59,7 @@ vorpal
   
         break
       default:
-        this.log('cmd not recognised', { props })
+        logErr(new Error(`"${props.cmd}" cmd not recognised`))
         break
     }
 
@@ -69,25 +69,19 @@ vorpal
 vorpal
   .command('request <endpoint> [args...]', 'Makes a request to a remit endpoint')
   .option('-v, --verbose', 'Prints latency')
-  .option('--json, --raw', 'Prints JSON rather than YAML')
+  .option('--json', 'Prints JSON rather than YAML')
   .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
-
-    console.log(1)
+    console.log('TADA', args)
 
     connection.then(() => {
       const makeRequest = remit
         .request(props.endpoint)
         .options({ timeout: 1000 })
-      
-        console.log(2)
 
       const request = pTime(makeRequest)(args)
 
       return request.then((data) => {
-        console.log(3)
-  
-        console.log('data', data)
         const bg = request.time < 200 ? 'green' : request.time > 500 ? 'red' : 'yellow'
   
         if (props.options.verbose) {
@@ -106,8 +100,8 @@ vorpal
   })
 
 vorpal
-  .command('emit <endpoint> [args...]', 'Emits to a listener')
-  .option('--json, --raw', 'Prints JSON rather than YAML')
+.command('emit <endpoint> [args...]', 'Emits to a listener')
+  .option('--json', 'Prints JSON rather than YAML')
   .action(function (props, cb) {
     const args = props.args ? marshal(props.args) : {}
 
@@ -121,8 +115,8 @@ vorpal
   })
 
 vorpal
-  .command('listen <endpoint>', 'Listens for emits')
-  .option('--json, --raw', 'Prints JSON rather than YAML')
+.command('listen <endpoint>', 'Listens for emits')
+  .option('--json', 'Prints JSON rather than YAML')
   .action(function (props, cb) {
     remit
       .listen(props.endpoint)
